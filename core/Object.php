@@ -216,14 +216,12 @@ class Object {
 	/**
 	 * Exit immediately. Primarily used for overrides during testing.
 	 *
-	 * @deprecated This method will be removed in a future version. Please use
-	 * 		\lithium\core\Command::_stop() instead.
+	 * @deprecated
 	 * @param integer|string $status integer range 0 to 254, string printed on exit
 	 * @return void
 	 */
 	protected function _stop($status = 0) {
-		$message  = "Calling of Object::stop() has been deprecated ";
-		$message .= "Please Use \lithium\core\Command::_stop() instead.";
+		$message  = '`' . __METHOD__ . '()` has been deprecated.';
 		trigger_error($message, E_USER_DEPRECATED);
 		exit($status);
 	}
