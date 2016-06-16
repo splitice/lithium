@@ -1074,7 +1074,7 @@ class ModelTest extends \lithium\test\Unit {
 	}
 
 	public function testLazyLoad() {
-		$object = MockPost::invokeMethod('_object');
+		$object = MockPost::object();
 		$object->belongsTo = ['Unexisting'];
 		MockPost::config();
 		MockPost::invokeMethod('_initialize', ['lithium\tests\mocks\data\MockPost']);

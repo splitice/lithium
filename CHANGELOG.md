@@ -9,9 +9,17 @@
   merging `action\Controller::$_render` and `data\Model` properties. Also 
   slightly optimizes memory usage in said classes.
 
+- `Helper::attributes()` is now part of the public API.
+
 ### Changed
 
 ### Deprecated
+
+- Other deprecations:
+
+  | old | new |
+  | --- | --- |
+  | `template\Helper::_attributes()` | `template\Helper::attributes()` |
 
 ### Fixed
 

@@ -29,6 +29,8 @@ class StaticObjectTest extends \lithium\test\Unit {
 	/**
 	 * Tests that the correct parameters are always passed in `StaticObject::invokeMethod()`,
 	 * regardless of the number.
+	 *
+	 * @deprecated
 	 */
 	public function testMethodInvocationWithParameters() {
 		$this->assertEqual(MockStaticObject::invokeMethod('foo'), []);

@@ -33,6 +33,8 @@ class ObjectTest extends \lithium\test\Unit {
 	/**
 	 * Tests that the correct parameters are always passed in Object::invokeMethod(), regardless of
 	 * the number.
+	 *
+	 * @deprecated
 	 */
 	public function testMethodInvocationWithParameters() {
 		$callable = new MockCallable();
