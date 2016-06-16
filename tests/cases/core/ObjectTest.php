@@ -115,6 +115,8 @@ class ObjectTest extends \lithium\test\Unit {
 
 	/**
 	 * Tests that an object can be instantiated using the magic `__set_state()` method.
+	 *
+	 * @deprecated
 	 */
 	public function testStateBasedInstantiation() {
 		$result = MockObjectConfiguration::__set_state([
