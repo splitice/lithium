@@ -16,6 +16,16 @@ use lithium\tests\mocks\core\MockStaticObject;
 
 class StaticObjectTest extends \lithium\test\Unit {
 
+	protected $_backup = null;
+
+	public function setUp() {
+		error_reporting(($this->_backup = error_reporting()) & ~E_USER_DEPRECATED);
+	}
+
+	public function tearDown() {
+		error_reporting($this->_backup);
+	}
+
 	/**
 	 * Tests that the correct parameters are always passed in `StaticObject::invokeMethod()`,
 	 * regardless of the number.

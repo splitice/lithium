@@ -4,6 +4,11 @@
 
 ### Added
 
+- Added `core\MergeInheritable` trait which allows classes to merge their array
+  properties with such properties defined in class parents. Used mainly for
+  merging `action\Controller::$_render` and `data\Model` properties. Also 
+  slightly optimizes memory usage in said classes.
+
 ### Changed
 
 ### Deprecated
