@@ -15,6 +15,18 @@
 
 ### Deprecated
 
+- `Object` and `StaticObject` have been deprecated, as `Object` is soft-reserved 
+  in PHP >=7. Chance was taken for a cleanup of the class-hirarchy and 
+  unused/obsolete methods.  
+
+  | old | new |
+  | --- | --- |
+  | `Object::__set_state()` | _no replacement_ |
+  | `*Object::_parents()` | _no replacement_, for inheritance use `lithium\core\MergeInheritable::_inherit()` |
+  | `*Object::_stop()` | _no replacement_, must reimplement |
+  | `*Object::invokeMethod()` | _no replacement_, use `call_user_func_array()` |
+  | `analysis\Inspector::invokeMethod()` | _no replacement_ |
+
 - Other deprecations:
 
   | old | new |
