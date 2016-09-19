@@ -10,6 +10,7 @@
 namespace lithium\analysis;
 
 use Exception;
+use Radical\Basic\Arr\Object\CollectionObject;
 use ReflectionClass;
 use ReflectionProperty;
 use ReflectionException;
@@ -361,10 +362,10 @@ class Inspector {
 			}
 			if (is_string($class)) {
 				if (!$item->isStatic()) {
-					$message = 'Must provide an object instance for non-static properties.';
-					throw new InvalidArgumentException($message);
+					$value = null;
+				}else {
+					$value = $item->getValue($item->getDeclaringClass());
 				}
-				$value = $item->getValue($item->getDeclaringClass());
 			} else {
 				$value = $item->getValue($class);
 			}
@@ -597,7 +598,7 @@ class Inspector {
 		if ($options['public']) {
 			$data = array_filter($data, function($item) { return $item->isPublic(); });
 		}
-		return static::_instance('collection', compact('data'));
+		return new CollectionObject($data);
 	}
 
 	/**
