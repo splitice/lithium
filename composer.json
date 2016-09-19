@@ -22,7 +22,7 @@
     },
 	"autoload" : {
 		"psr-0" : {
-			"lithium" : "./"
+			"lithium" : "../"
 		}
 	},
     "bin" : ["console/li3"]
