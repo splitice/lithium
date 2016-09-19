@@ -4,7 +4,7 @@
     "keywords": ["lithium", "li3", "framework"],
     "homepage": "http://li3.me",
     "license": "BSD-3-Clause",
-    "type": "lithium-library",
+    "type": "library",
     "authors": [
         {"name": "Union of RAD"},
         {"name": "The Community"}
