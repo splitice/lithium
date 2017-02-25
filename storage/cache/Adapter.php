@@ -1,9 +1,10 @@
 <?php
 /**
- * Lithium: the most rad php framework
+ * li₃: the most RAD framework for PHP (http://li3.me)
  *
- * @copyright     Copyright 2016, Union of RAD (http://union-of-rad.org)
- * @license       http://opensource.org/licenses/bsd-license.php The BSD License
+ * Copyright 2016, Union of RAD. All rights reserved. This source
+ * code is distributed under the terms of the BSD 3-Clause License.
+ * The full license text can be found in the LICENSE.txt file.
  */
 
 namespace lithium\storage\cache;
@@ -32,6 +33,16 @@ namespace lithium\storage\cache;
  * Adapters may handle serialization and/or multi-keys natively others only synthetically.
  */
 abstract class Adapter extends \lithium\core\Object {
+
+	/**
+	 * Generates safe cache keys.
+	 *
+	 * @param array $keys The original keys.
+	 * @return array Keys modified and safe to use with adapter.
+	 */
+	public function key(array $keys) {
+		return $keys;
+	}
 
 	/**
 	 * Write values to the cache. All items to be cached will receive an
@@ -121,7 +132,7 @@ abstract class Adapter extends \lithium\core\Object {
 	 * @return array Prefixed keys array.
 	 */
 	protected function _addScopePrefix($scope, array $keys, $separator = ':') {
-		$results = array();
+		$results = [];
 		$isMapped = !is_int(key($keys));
 
 		foreach ($keys as $key => $value) {
@@ -143,7 +154,7 @@ abstract class Adapter extends \lithium\core\Object {
 	 * @return array Keys array with prefix removed from each key.
 	 */
 	protected function _removeScopePrefix($scope, array $data, $separator = ':') {
-		$results = array();
+		$results = [];
 		$prefix = strlen("{$scope}{$separator}");
 
 		foreach ($data as $key => $value) {

@@ -1,14 +1,17 @@
 <?php
 /**
- * Lithium: the most rad php framework
+ * li₃: the most RAD framework for PHP (http://li3.me)
  *
- * @copyright     Copyright 2016, Union of RAD (http://union-of-rad.org)
- * @license       http://opensource.org/licenses/bsd-license.php The BSD License
+ * Copyright 2016, Union of RAD. All rights reserved. This source
+ * code is distributed under the terms of the BSD 3-Clause License.
+ * The full license text can be found in the LICENSE.txt file.
  */
 
 namespace lithium\data\model;
 
+use Exception;
 use Countable;
+use Traversable;
 use lithium\util\Set;
 use lithium\core\Libraries;
 use lithium\core\ConfigException;
@@ -25,9 +28,9 @@ class Relationship extends \lithium\core\Object {
 	 *
 	 * @var array
 	 */
-	protected $_classes = array(
+	protected $_classes = [
 		'entity' => 'lithium\data\Entity'
-	);
+	];
 
 	/**
 	 * A relationship linking type defined by one document or record (or multiple) being embedded
@@ -67,7 +70,7 @@ class Relationship extends \lithium\core\Object {
 	 *        - `'name'` _string_: The name of the relationship in the context of the
 	 *          originating model. For example, a `Posts` model might define a relationship to
 	 *          a `Users` model like so:
-	 *          `public $hasMany = array('Author' => array('to' => 'Users'));`
+	 *          `public $hasMany = ['Author' => ['to' => 'Users']];`
 	 *          In this case, the relationship is bound to the `Users` model, but `'Author'` would
 	 *          be the relationship name. This is the name with which the relationship is
 	 *          referenced in the originating model.
@@ -105,19 +108,19 @@ class Relationship extends \lithium\core\Object {
 	 *          the `Relationship` instance has finished configuring itself.
 	 * @return void
 	 */
-	public function __construct(array $config = array()) {
-		$defaults = array(
+	public function __construct(array $config = []) {
+		$defaults = [
 			'name'        => null,
-			'key'         => array(),
+			'key'         => [],
 			'type'        => null,
 			'to'          => null,
 			'from'        => null,
 			'link'        => static::LINK_KEY,
 			'fields'      => true,
 			'fieldName'   => null,
-			'constraints' => array(),
+			'constraints' => [],
 			'strategy'    => null
-		);
+		];
 		$config += $defaults;
 
 		if (!$config['type'] || !$config['fieldName']) {
@@ -174,7 +177,7 @@ class Relationship extends \lithium\core\Object {
 	 * @param array $args Unused.
 	 * @return mixed Returns the value of the given configuration item.
 	 */
-	public function __call($name, $args = array()) {
+	public function __call($name, $args = []) {
 		return $this->data($name);
 	}
 
@@ -186,7 +189,7 @@ class Relationship extends \lithium\core\Object {
 	 *              applicable.
 	 * @return object Returns the object(s) for this relationship.
 	 */
-	public function get($object, array $options = array()) {
+	public function get($object, array $options = []) {
 		$link = $this->link();
 		$strategies = $this->_strategies();
 
@@ -231,7 +234,7 @@ class Relationship extends \lithium\core\Object {
 	 *               the associated values of foreign keys.
 	 */
 	public function foreignKey($primaryKey) {
-		$result = array();
+		$result = [];
 		$entity = $this->_classes['entity'];
 		$keys = ($this->type() === 'belongsTo') ? array_flip($this->key()) : $this->key();
 		$primaryKey = ($primaryKey instanceof $entity) ? $primaryKey->to('array') : $primaryKey;
@@ -252,7 +255,7 @@ class Relationship extends \lithium\core\Object {
 	 * @return boolean Returns `true` if the method can be called, `false` otherwise.
 	 */
 	public function respondsTo($method, $internal = false) {
-		return is_callable(array($this, $method), true);
+		return is_callable([$this, $method], true);
 	}
 
 	/**
@@ -261,7 +264,7 @@ class Relationship extends \lithium\core\Object {
 	 */
 	protected function _keys($keys) {
 		if (!$keys) {
-			return array();
+			return [];
 		}
 		$config = $this->_config;
 		$hasType = ($config['type'] === 'hasOne' || $config['type'] === 'hasMany');
@@ -288,7 +291,7 @@ class Relationship extends \lithium\core\Object {
 	 * Strategies used to query related objects, indexed by key.
 	 */
 	protected function _strategies() {
-		return array(
+		return [
 			static::LINK_EMBEDDED => function($object, $relationship) {
 				$fieldName = $relationship->fieldName();
 				return $object->{$fieldName};
@@ -310,7 +313,161 @@ class Relationship extends \lithium\core\Object {
 				$query = $relationship->query($object);
 				return $model::all(Set::merge($query, $options));
 			}
-		);
+		];
+	}
+
+	/**
+	 * Fetch data related to a whole collection and embed the result in it.
+	 *
+	 * @param mixed $collection A collection of data.
+	 * @param array $options The embed query options.
+	 * @return mixed The fetched data.
+	 */
+	public function embed(&$collection, $options = []) {
+		$keys = $this->key();
+
+		if (count($keys) !== 1) {
+			throw new Exception("The embedding doesn't support composite primary key.");
+		}
+		list($formKey, $toKey) = each($keys);
+
+		$related = [];
+
+		if ($this->type() === 'belongsTo') {
+			$indexes = $this->_index($collection, $formKey);
+			$related = $this->_find(array_keys($indexes), $options);
+
+			$fieldName = $this->fieldName();
+			$indexes = $this->_index($related, $toKey);
+			$this->_cleanup($collection);
+
+			foreach ($collection as $index => $source) {
+				if (is_object($source)) {
+					$value = (string) $source->{$formKey};
+					if (isset($indexes[$value])) {
+						$source->{$fieldName} = $related[$indexes[$value]];
+					}
+				} else {
+					$value = (string) $source[$formKey];
+					if (isset($indexes[$value])) {
+						$collection[$index][$fieldName] = $related[$indexes[$value]];
+					}
+				}
+			}
+		} elseif ($this->type() === 'hasMany') {
+			$indexes = $this->_index($collection, $formKey);
+			$related = $this->_find(array_keys($indexes), $options);
+
+			$fieldName = $this->fieldName();
+
+			$this->_cleanup($collection);
+
+			foreach ($collection as $index => $entity) {
+				if (is_object($entity)) {
+					$entity->{$fieldName} = [];
+				} else {
+					$collection[$index][$fieldName] = [];
+				}
+			}
+
+			foreach ($related as $index => $entity) {
+				$isObject = is_object($entity);
+				$values = $isObject ? $entity->{$toKey} : $entity[$toKey];
+				$values = is_array($values) || $values instanceof Traversable ? $values : [$values];
+
+				foreach ($values as $value) {
+					$value = (string) $value;
+					if (isset($indexes[$value])) {
+						if ($isObject) {
+							$source = $collection[$indexes[$value]];
+							$source->{$fieldName}[] = $entity;
+						} else {
+							$collection[$indexes[$value]][$fieldName][] = $entity;
+						}
+					}
+				}
+			}
+		} elseif ($this->type() === 'hasOne') {
+			$indexes = $this->_index($collection, $formKey);
+			$related = $this->_find(array_keys($indexes), $options);
+			$fieldName = $this->fieldName();
+			$this->_cleanup($collection);
+
+			foreach ($related as $index => $entity) {
+				if (is_object($entity)) {
+					$value = (string) $entity->{$toKey};
+					if (isset($indexes[$value])) {
+						$source = $collection[$indexes[$value]];
+						$source->{$fieldName} = $entity;
+					}
+				} else {
+					$value = (string) $entity[$toKey];
+					if (isset($indexes[$value])) {
+						$collection[$indexes[$value]][$fieldName] = $entity;
+					}
+				}
+			}
+		} else {
+			throw new Exception("Error {$this->type()} is unsupported ");
+		}
+		return $related;
+	}
+
+	/**
+	 * Gets all entities attached to a collection en entities.
+	 *
+	 * @param  mixed  $id An id or an array of ids.
+	 * @return object     A collection of items matching the id/ids.
+	 */
+	protected function _find($id, $options = []) {
+		if ($this->link() !== static::LINK_KEY) {
+			throw new Exception("This relation is not based on a foreign key.");
+		}
+		if ($id === []) {
+			return [];
+		}
+		$to = $this->to();
+		$options += ['conditions' => []];
+		$options['conditions'] = array_merge($options['conditions'], [
+			current($this->key()) => $id
+		]);
+		return $to::find('all', $options);
+	}
+
+	/**
+	 * Indexes a collection.
+	 *
+	 * @param  mixed  $collection An collection to extract index from.
+	 * @param  string $name       The field name to build index for.
+	 * @return array              An array of indexes where keys are `$name` values and
+	 *                            values the correcponding index in the collection.
+	 */
+	protected function _index($collection, $name) {
+		$indexes = [];
+		foreach ($collection as $key => $entity) {
+			if (is_object($entity)) {
+				$indexes[(string) $entity->{$name}] = $key;
+			} else {
+				$indexes[(string) $entity[$name]] = $key;
+			}
+		}
+		return $indexes;
+	}
+
+	/**
+	 * Unsets the relationship attached to a collection en entities.
+	 *
+	 * @param  mixed  $collection An collection to "clean up".
+	 */
+	public function _cleanup($collection) {
+		$name = $this->name();
+		foreach ($collection as $index => $entity) {
+			if (is_object($entity)) {
+				unset($entity->{$name});
+			} else {
+				unset($entity[$name]);
+			}
+		}
 	}
 }
 
