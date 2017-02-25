@@ -20,5 +20,10 @@
     "require-dev": {
         "unionofrad/li3_fixtures": "1.0.*"
     },
-    "bin" : ["console/li3"]
+    "bin" : ["console/li3"],
+    "autoload": {
+        "psr-0": {
+            "lithium": "."
+        }
+    }
 }
